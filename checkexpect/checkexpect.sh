@@ -6,6 +6,9 @@
 #     MIT LICENSE      #
 ########################
 
+# CheckExpect test a function output and compare theory/practice
+# CheckExpect function inputToFunction intendedOutput
+
 function CheckExpect(){
   if [ -z $1 ] || [ -z $2 ] || [ -z $3 ]
   then
