@@ -1,3 +1,11 @@
+#!/bin/bash
+
+########################
+#     By adnorth       #
+#         2014         #
+#     MIT LICENSE      #
+########################
+
 function CheckExpect(){
   if [ -z $1 ] || [ -z $2 ] || [ -z $3 ] && [ "$1" != "CheckDirectory" ]
   then
