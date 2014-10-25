@@ -7,7 +7,7 @@
 ########################
 
 function CheckExpect(){
-  if [ -z $1 ] || [ -z $2 ] || [ -z $3 ] && [ "$1" != "CheckDirectory" ]
+  if [ -z $1 ] || [ -z $2 ] || [ -z $3 ]
   then
     echo "usage: CheckExpect function inputToFunction outputOfFunction"
   fi
