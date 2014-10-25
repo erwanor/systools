@@ -1,8 +1,13 @@
 #!/bin/bash
 
+########################
+#      By adnorth      #
+#         2014         #
+#     MIT LICENSE      #
+########################
+
 # The purpose of this script is to automatically set security friendly permissions to a public web directory.
 # The directory is given by the user
-# By Ad 2014 under MIT License
 
 LOG_FILE="/var/log/setperm.log"
 DIRECTORY=$1;
