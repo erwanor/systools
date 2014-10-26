@@ -1,9 +1,5 @@
 Todo:
 
-vhostgen.sh:
-  1. Implement NameCheap API calls
-  2. Implement vhost generation + reload apache2
-
 checkexpect.sh
   1. Implement recursive check for CheckExpect
     a) Handle array as arguments
