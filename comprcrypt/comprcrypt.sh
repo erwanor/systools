@@ -7,7 +7,10 @@
 ######################
 
 # Your GPG ID
-GPG=59D02DF1
+# GPG=
+
+if [ -z $GPG ]; then echo "######################"; echo "#      FIRST USE     #"; echo "######################"; echo "Please set the variable GPG to your key id"; exit 0; fi
+
 target=${2%/}
 
 if [ "$1" == "-c" ] ; then
