@@ -1,21 +1,5 @@
 #!/bin/bash
 
-# TODO:
-: '
-IMPORTANT::::: 1. Before commiting changes erase API KEYS values
-2. write xml_read function
-3. Include a debug condition in Namecheap API functions
-a) check if everything was good using read xml
-b) if everything was good and we are not debugging then output 1
-c) if we are on debugging and something went wrong then print XML error code + output error
-d) if something went wrong and not on debuging then just output 0
-4) Write a Sanitize function
-5) Generate Apache2 virtualhost
-
-6) BUG: When add a new record with SetRecord
-a) make sure this record doesnt exist already
-b) handle the fact that the whole record is overwritten'
-
 ############################
 #        By adnorth        #
 #           2014           #
@@ -24,30 +8,34 @@ b) handle the fact that the whole record is overwritten'
 
 # The purpose of this script is to allow the generation of subdomains using Namecheap API (c) and Apache2
 
-# To be deleted
-vhost_directory="/home/ad/tools/vhostgen/sites-available"
-config_dir="/home/ad/tools/vhostgen/config"
+##############CONFIGURATION INFORMATIONS###############
+vhost_directory="/etc/apache2/sites-available/"
+config_dir="/home/user/tools/vhostgen/config"
 subdomain=$1
 serverpath=$2
-debug="1"
-api_user="waterfrog"
-api_key="aa8d4586d58042efbb61ea4e117a477d"
-nc_user="waterfrog"
-client_ip="104.131.51.237"
-target_ip="104.131.51.237"
-domain_sld="rely"
-domain_tld="io"
-#############
+
+##############NAMECHEAP INFORMATIONS###################
+api_user=""
+api_key=""
+nc_user=""
+client_ip=""
+target_ip=""
+domain_sld=""
+domain_tld=""
+
+#############DEBUG INFORMATIONS#########################
+debug="0"
+if [ "$3" = "-d" ]; then debug="1" fi
 
 # CheckDomain string -> boolean
 # Check if $string is an allowed domain name (alphanumerical characters)(dot)(alpha characters)
 function CheckDomain(){
-  echo $1 > in.tmp
-  input=$(grep -P '^[a-zA-Z0-9]*[.][a-zA-Z]*$' in.tmp)
-  rm in.tmp
+  echo $1 > $config_dir/in.tmp
+  input=$(grep -P '^[a-zA-Z0-9]*[.][a-zA-Z]*$' $config_dir/in.tmp)
+  rm $config_dir/in.tmp
   if [ -z "$input" ]
   then
-    if [ "$debug" = 0 ]
+    if [ "$debug" = "1" ]
     then
       echo "0"
     else
@@ -89,30 +77,80 @@ function EscapeDirectory(){
 
 # CheckAPI string -> boolean
 # Check validity of Namecheap API Key
-function CheckAPI(){
+: 'function CheckAPI(){
   api_command="namecheap.domains.getList"
-  call="https://api.sandbox.namecheap.com/xml.response?ApiUser=$api_user&ApiKey=$api_key&UserName=$nc_user&ClientIp=$client_ip&Command=$api_command"
-  read_xml "curl $call"
-}
+  call="https://api.namecheap.com/xml.response?ApiUser=$api_user&ApiKey=$api_key&UserName=$nc_user&ClientIp=$client_ip&Command=$api_command"
+  output= curl $call
+  echo $output
+}'
 
 # AddRecord string , string -> boolean
 # Add subdomain to host records
-: 'function SetRecord(){
+function SetRecord(){
   api_command="namecheap.domains.dns.setHosts"
-  call="http://api.namecheap.com/xml.response?apiuser=$nc_user&apikey=$api_key&username=$nc_user&Command=$api_command&ClientIp=$client_ip&SLD=$domain_sld&TLD=$domain_tld&HostName1=$subdomain&RecordType1=A&Address1=$target_ip"
-  output="curl $call"
-}'
+  call="http://api.namecheap.com/xml.response?apiuser=$nc_user&apikey=$api_key&username=$nc_user&Command=$api_command&ClientIp=$client_ip&SLD=$domain_sld&TLD=$domain_tld"
+
+  # Namecheap overwrite all the DNS Hosts records by default
+  # Afaik there is no way to avoid to overwrite everything, everytime we create a new host. To counter this side effect, we will store all our host records and generate a query when needed
+
+  if grep -q $subdomain "$config_dir/hosts"; then if [ "$debug" = "1" ]; then echo "0"; else echo "subdomain exist already"; exit 0; fi fi
+  numberOfRecords=$(cat "$config_dir/hosts" | wc -l)
+  if [ $numberOfRecords -ge 10 ]; then if [ "$debug" = "1" ]; then echo "0"; else echo "There is too many subdomains"; exit 0; fi fi
+  cursor=1
+  while [ $cursor -le $numberOfRecords ]; do
+    line=$cursor"p"
+    path="$config_dir/hosts"
+    call+="&HostName$cursor=$(sed -n $line $path)&RecordType$cursor=A&Address$cursor=$target_ip"
+    ((cursor++))
+  done
+  ((cursor++))
+  call+="&HostName$cursor=$subdomain&RecordType$cursor=A&Address$cursor=$target_ip"
+  output= curl $call>$config_dir/tmp.xml
+  success="OK"
+  if grep -q $success $config_dir/tmp.xml
+  then
+    echo ""
+    echo "$subdomain">>"$config_dir/hosts"
+    echo "record successfully create: $subdomain.$domain_sld.$domain_tld is now available"
+    rm $config_dir/tmp.xml
+  else
+    rm $config_dir/tmp.xml
+    echo "0"
+    if [ "$debug" = "1" ]; then
+      echo $output>>"$config_dir/api_outputs.log"
+      echo "API Call failed please contact admin"
+    fi
+  fi
+}
 
 # Xml parser
-# User: chad on stackoverflow.com
-function read_xml(){
-  file="$1"
-  local IFS="\>"
-  read -d \> ENTITY CONTENT
-  while read_dom; do
-    echo "$ENTITY => $CONTENT"
-  done<$file
+# by chad on stackoverflow.com
+: 'function read_xml(){
+  local IFS=\>
+  read -d \< ENTITY CONTENT
+  local ret=$?
+  TAG_NAME=${ENTITY%% *}
+  ATTRIBUTES=${ENTITY#* }
+  return $ret
 }
+
+function parse_dom () {
+  if [[ $TAG_NAME = "foo" ]] ; then
+    eval local $ATTRIBUTES
+
+  echo "foo size is: $size"
+
+  elif [[ $TAG_NAME = "bar" ]] ; then
+    eval local $ATTRIBUTES
+    echo "bar type is: $type"
+  fi
+}
+
+function xml_wrapper(){
+  while read_dom; do
+        parse_dom
+    done
+}'
 
 # CheckExpect function input output
 # Test a function output
@@ -138,8 +176,23 @@ function CheckExpect(){
   fi
 }
 
+SetRecord
+
+if [ "CheckDomain "$subdomain"" = "1" ] || [ "CheckDirectory "$serverpath"" = "1" ]
+then
+  echo "vhostgen usage: vhostgen domain.tld /path/to/public/directory"
+  exit 0;
+else
+  serverpath=$(EscapeDirectory $serverpath)
+  echo $serverpath
+  cp -v "$config_dir/default" "$vhost_directory/$subdomain.$domain_sld.$domain_tld"
+  sed s@"defaultdomain"@$subdomain.$domain_sld.$domain_tld@ $vhost_directory/$subdomain.$domain_sld.$domain_tld > $vhost_directory/$subdomain.tmp && mv $vhost_directory/$subdomain.tmp $vhost_directory/$subdomain.$domain_sld.$domain_tld
+  sed s@"defaultpath"@$serverpath@ $vhost_directory/$subdomain.$domain_sld.$domain_tld > $vhost_directory/$subdomain.tmp && mv $vhost_directory/$subdomain.tmp $vhost_directory/$subdomain.$domain_sld.$domain_tld
+  a2ensite $subdomain.$domain_sld.$domain_tld
+fi
+
 #@ Tests:
-if [ "$debug" = "0" ]
+if [ "$debug" = "1" ]
 then
   #@ CheckDomain
     CheckExpect CheckDomain "test.com" 1
@@ -163,14 +216,4 @@ then
 fi
 #@
 
-SetRecord "test"
-: '
-if CheckDomain "$subdomain" || CheckDirectory "$serverpath"
-then
-  echo "vhostgen usage: vhostgen domain.tld /path/to/public/directory"
-  exit 0;
-else
-  cp -v "$config_dir/default" "$vhost_directory/$subdomain"
-  sed s@"defaultdomain"@$subdomain@ $vhost_directory/$subdomain > $vhost_directory/$subdomain.tmp && mv $vhost_directory/$subdomain.tmp $vhost_directory/$subdomain
-  sed s@"defaultpath"@$serverpath@ $vhost_directory/$subdomain > $vhost_directory/$subdomain.tmp && mv $vhost_directory/$subdomain.tmp $vhost_directory/$subdomain
-fi'
+exit 0
