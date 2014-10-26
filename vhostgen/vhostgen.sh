@@ -92,16 +92,16 @@ function EscapeDirectory(){
 function CheckAPI(){
   api_command="namecheap.domains.getList"
   call="https://api.sandbox.namecheap.com/xml.response?ApiUser=$api_user&ApiKey=$api_key&UserName=$nc_user&ClientIp=$client_ip&Command=$api_command"
-  echo $call
+  read_xml "curl $call"
 }
 
 # AddRecord string , string -> boolean
 # Add subdomain to host records
-function SetRecord(){
+: 'function SetRecord(){
   api_command="namecheap.domains.dns.setHosts"
   call="http://api.namecheap.com/xml.response?apiuser=$nc_user&apikey=$api_key&username=$nc_user&Command=$api_command&ClientIp=$client_ip&SLD=$domain_sld&TLD=$domain_tld&HostName1=$subdomain&RecordType1=A&Address1=$target_ip"
   output="curl $call"
-}
+}'
 
 # Xml parser
 # User: chad on stackoverflow.com
