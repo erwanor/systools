@@ -1,10 +1,10 @@
 #!/bin/bash
 
-############################
-#        By adnorth        #
-#           2014           #
-#       MIT LICENSE        #
-############################
+#################################
+#        By aaaronwinter        #
+#              2014             #
+#          MIT LICENSE          #
+#################################
 
 # The purpose of this script is to allow the generation of subdomains using Namecheap API (c) and Apache2
 
