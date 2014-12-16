@@ -1,7 +1,7 @@
 # Systools
 ====
 
-## Systools is a collection of administration tools written in Bash for GNU Linux. 
+* Systools is a collection of administration tools written in Bash for GNU Linux. *
 
 ## Summary
 
