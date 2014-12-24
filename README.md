@@ -7,7 +7,7 @@
 
 * compcrypt.sh: generate encrypted backups. 
 * setperm.sh: set appropriate permissions for web directories
-* checkexpect.sh: unit-testing in Bash
+* checkexpect.sh: easy unit-testing in Bash
 * vhostgen.sh: Generate Apache2 virtualhost and create a subdomain using Namecheap API. 
 
 ### Usage:
