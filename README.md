@@ -1,6 +1,8 @@
 # Systools
 ====
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/aaronwinter/systools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 **Systools is a collection of administration tools written in Bash for GNU Linux.**
 
 ## Summary
