@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ########################
-#      By adnorth      #
+#   By aaronwinter     #
 #         2014         #
 #     MIT LICENSE      #
 ########################
