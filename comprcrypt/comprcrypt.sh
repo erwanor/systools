@@ -9,7 +9,13 @@
 # Your GPG ID
 # GPG=
 
-if [ -z $GPG ]; then echo "######################"; echo "#      FIRST USE     #"; echo "######################"; echo "Please set the variable GPG to your key id"; exit 0; fi
+if [ -z $GPG ]; then 
+  echo "######################"
+  echo "#      FIRST USE     #"
+  echo "######################"
+  echo "Please set the variable GPG to your key id"
+  exit 0; 
+fi
 
 target=${2%/}
 
